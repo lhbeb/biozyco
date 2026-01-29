@@ -120,6 +120,12 @@ function EditUserContent({ params }: { params: { username: string } }) {
       return;
     }
 
+    // Validate that admin is selected
+    if (!listedBy || listedBy.trim() === '') {
+      setSaveError('Please select which admin is managing this profile');
+      return;
+    }
+
     setSaving(true);
 
     try {
@@ -519,14 +525,15 @@ function EditUserContent({ params }: { params: { username: string } }) {
 
               <div>
                 <label className="block text-sm font-semibold text-text-primary mb-2">
-                  Listed By
+                  Listed By *
                 </label>
                 <select
                   value={listedBy}
                   onChange={(e) => setListedBy(e.target.value)}
                   className="w-full px-4 py-3 border border-accent/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-accent/50 text-text-primary bg-white"
+                  required
                 >
-                  <option value="">Not assigned</option>
+                  <option value="">Select admin...</option>
                   {ADMIN_NAMES.map((admin) => (
                     <option key={admin} value={admin}>
                       {admin}
@@ -534,7 +541,7 @@ function EditUserContent({ params }: { params: { username: string } }) {
                   ))}
                 </select>
                 <p className="text-sm text-text-primary/60 mt-2">
-                  Select which admin manages this profile
+                  You must identify yourself to edit this profile
                 </p>
               </div>
 

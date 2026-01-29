@@ -11,17 +11,19 @@ const SESSION_DURATION = 24 * 60 * 60 * 1000; // 24 hours
 interface SessionData {
   authenticated: boolean;
   timestamp: number;
+  adminName?: string; // Track which admin is logged in
 }
 
 export function validateCredentials(email: string, password: string): boolean {
   return email === ADMIN_EMAIL && password === ADMIN_PASSWORD;
 }
 
-export function setSession(): void {
+export function setSession(adminName: string): void {
   if (typeof window !== 'undefined') {
     const sessionData: SessionData = {
       authenticated: true,
       timestamp: Date.now(),
+      adminName: adminName,
     };
     localStorage.setItem(SESSION_KEY, JSON.stringify(sessionData));
   }
@@ -33,6 +35,31 @@ export function clearSession(): void {
   }
 }
 
+export function getCurrentAdmin(): string | null {
+  if (typeof window === 'undefined') {
+    return null;
+  }
+
+  try {
+    const sessionDataStr = localStorage.getItem(SESSION_KEY);
+
+    if (!sessionDataStr) {
+      return null;
+    }
+
+    const sessionData: SessionData = JSON.parse(sessionDataStr);
+
+    if (!sessionData.authenticated || !sessionData.adminName) {
+      return null;
+    }
+
+    return sessionData.adminName;
+  } catch (error) {
+    console.error('Error reading admin name:', error);
+    return null;
+  }
+}
+
 export function isAuthenticated(): boolean {
   if (typeof window === 'undefined') {
     return false;
@@ -40,7 +67,7 @@ export function isAuthenticated(): boolean {
 
   try {
     const sessionDataStr = localStorage.getItem(SESSION_KEY);
-    
+
     if (!sessionDataStr) {
       return false;
     }
@@ -80,7 +107,7 @@ export function getSessionRemainingTime(): number {
 
   try {
     const sessionDataStr = localStorage.getItem(SESSION_KEY);
-    
+
     if (!sessionDataStr) {
       return 0;
     }
