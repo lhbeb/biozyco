@@ -11,7 +11,6 @@ const nextConfig = {
         hostname: '**',
       },
     ],
-    domains: ['www.google.com'], // For favicon service
   },
 };
 
