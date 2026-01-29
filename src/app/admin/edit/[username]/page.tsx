@@ -648,10 +648,12 @@ function EditUserContent({ params }: { params: { username: string } }) {
   );
 }
 
-export default function EditUser({ params }: { params: { username: string } }) {
+export default async function EditUser({ params }: { params: Promise<{ username: string }> }) {
+  const { username } = await params;
+
   return (
     <AuthGuard>
-      <EditUserContent params={params} />
+      <EditUserContent params={{ username }} />
     </AuthGuard>
   );
 }

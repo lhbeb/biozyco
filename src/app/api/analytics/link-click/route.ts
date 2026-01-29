@@ -24,7 +24,7 @@ async function getLocationFromIP(ip: string): Promise<{
     try {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 3000);
-      
+
       const response = await fetch(`https://ipapi.co/${ip}/json/`, {
         headers: {
           'User-Agent': 'Biozy Analytics',
@@ -36,7 +36,7 @@ async function getLocationFromIP(ip: string): Promise<{
 
       if (response.ok) {
         const data = await response.json();
-        
+
         if (data.error) {
           throw new Error(data.reason || 'IP API error');
         }
@@ -51,12 +51,12 @@ async function getLocationFromIP(ip: string): Promise<{
       if (ipapiError.name !== 'AbortError') {
         console.warn('ipapi.co failed, trying fallback:', ipapiError);
       }
-      
+
       // Fallback to ip-api.com
       try {
         const fallbackController = new AbortController();
         const fallbackTimeoutId = setTimeout(() => fallbackController.abort(), 3000);
-        
+
         const fallbackResponse = await fetch(`http://ip-api.com/json/${ip}?fields=status,message,country,countryCode,city`, {
           signal: fallbackController.signal,
         });
@@ -65,7 +65,7 @@ async function getLocationFromIP(ip: string): Promise<{
 
         if (fallbackResponse.ok) {
           const fallbackData = await fallbackResponse.json();
-          
+
           if (fallbackData.status === 'success') {
             return {
               country: fallbackData.country || 'Unknown',
@@ -138,11 +138,6 @@ function getClientIP(request: NextRequest): string {
   if (clientIP) {
     const ip = clientIP.split(',')[0].trim();
     if (ip) return ip;
-  }
-
-  // Fallback to Next.js request IP
-  if (request.ip) {
-    return request.ip;
   }
 
   // Last resort fallback

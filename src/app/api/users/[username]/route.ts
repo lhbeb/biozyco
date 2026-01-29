@@ -7,11 +7,11 @@ export const revalidate = 0;
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { username: string } }
+  { params }: { params: Promise<{ username: string }> }
 ) {
   try {
-    const username = params.username;
-    
+    const { username } = await params;
+
     // Validate username format (basic validation for route parameter)
     const validation = validateUsername(username);
     if (!validation.isValid) {
@@ -20,7 +20,7 @@ export async function GET(
         { status: 400 }
       );
     }
-    
+
     const user = await getUser(username);
 
     if (!user) {

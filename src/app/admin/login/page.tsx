@@ -31,7 +31,7 @@ export default function AdminLogin() {
     await new Promise((resolve) => setTimeout(resolve, 500));
 
     if (validateCredentials(email, password)) {
-      setSession();
+      setSession('Admin'); // Default admin name
       router.push('/admin');
     } else {
       setError('Invalid email or password');

@@ -30,7 +30,7 @@ async function getLocationFromIP(ip: string): Promise<{
     try {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 5000);
-      
+
       const response = await fetch(`https://ipapi.co/${ip}/json/`, {
         headers: {
           'User-Agent': 'Biozy Analytics',
@@ -42,7 +42,7 @@ async function getLocationFromIP(ip: string): Promise<{
 
       if (response.ok) {
         const data = await response.json();
-        
+
         // Check if we got an error response
         if (data.error) {
           throw new Error(data.reason || 'IP API error');
@@ -59,12 +59,12 @@ async function getLocationFromIP(ip: string): Promise<{
       if (ipapiError.name !== 'AbortError') {
         console.warn('ipapi.co failed, trying fallback:', ipapiError);
       }
-      
+
       // Fallback to ip-api.com (free tier: 45 requests/minute)
       try {
         const fallbackController = new AbortController();
         const fallbackTimeoutId = setTimeout(() => fallbackController.abort(), 5000);
-        
+
         const fallbackResponse = await fetch(`http://ip-api.com/json/${ip}?fields=status,message,country,countryCode,city`, {
           signal: fallbackController.signal,
         });
@@ -73,7 +73,7 @@ async function getLocationFromIP(ip: string): Promise<{
 
         if (fallbackResponse.ok) {
           const fallbackData = await fallbackResponse.json();
-          
+
           if (fallbackData.status === 'success') {
             return {
               country: fallbackData.country || 'Unknown',
@@ -150,11 +150,6 @@ function getClientIP(request: NextRequest): string {
     if (ip) return ip;
   }
 
-  // Fallback to Next.js request IP
-  if (request.ip) {
-    return request.ip;
-  }
-
   // Last resort fallback
   return 'Unknown';
 }
@@ -196,10 +191,10 @@ export async function POST(request: NextRequest) {
     } else if (recentViews && recentViews.length > 0) {
       // Duplicate view detected within 10 seconds, return success without inserting
       // This catches rapid duplicate requests while allowing legitimate refreshes
-      return NextResponse.json({ 
-        success: true, 
+      return NextResponse.json({
+        success: true,
         id: recentViews[0].id,
-        duplicate: true 
+        duplicate: true
       });
     }
 
