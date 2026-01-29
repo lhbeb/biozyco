@@ -15,7 +15,6 @@ function EditUserContent({ params }: { params: { username: string } }) {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [username, setUsername] = useState(params.username);
-  const [username, setUsername] = useState(params.username);
   const [usernameError, setUsernameError] = useState<string | null>(null);
   const [listedBy, setListedBy] = useState<string>('');
   const [theme, setTheme] = useState<ThemeType>(DEFAULT_THEME);
@@ -47,8 +46,6 @@ function EditUserContent({ params }: { params: { username: string } }) {
         const data = await response.json();
         const user: UserPage = data.user;
         setUsername(user.username);
-        setListedBy(user.listedBy || '');
-        setProfilePicture(user.profilePicture);
         setListedBy(user.listedBy || '');
         setTheme((user.theme as ThemeType) || DEFAULT_THEME);
         setProfilePicture(user.profilePicture);
@@ -237,7 +234,6 @@ function EditUserContent({ params }: { params: { username: string } }) {
       const requestBody = {
         username: username,
         profilePicture: finalProfilePictureUrl,
-        bio,
         bio,
         links: linksToSave,
         listedBy: listedBy || null,
