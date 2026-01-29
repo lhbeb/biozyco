@@ -45,6 +45,7 @@ export async function POST(request: NextRequest) {
                 order: link.order,
             })),
             listedBy: originalUser.listedBy || null,
+            theme: originalUser.theme || 'standard',
         };
 
         console.log('Copying user:', username, 'to', newUsername);

@@ -3,23 +3,30 @@
 import { useState, useEffect } from 'react';
 import { ExternalLink, Globe, Link2 } from 'lucide-react';
 import { getFavicon } from '@/lib/thumbnail';
+import { THEMES, ThemeType, DEFAULT_THEME } from '@/lib/themes';
 
 interface LinkCardProps {
   title: string;
   url: string;
-  username?: string; // Add username prop for tracking
+  username?: string;
+  themeId?: string;
 }
 
-export default function LinkCard({ title, url, username }: LinkCardProps) {
+export default function LinkCard({ title, url, username, themeId = DEFAULT_THEME }: LinkCardProps) {
   const [thumbnail, setThumbnail] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [thumbnailError, setThumbnailError] = useState(false);
   const [faviconError, setFaviconError] = useState(false);
 
+  // Get theme styles
+  // Validation: Ensure themeId is valid, fallback to DEFAULT_THEME
+  const safeThemeId = (Object.keys(THEMES).includes(themeId) ? themeId : DEFAULT_THEME) as ThemeType;
+  const styles = THEMES[safeThemeId].styles;
+
   // Track link click
   const handleLinkClick = async () => {
     if (!username) return; // Only track if username is provided
-    
+
     try {
       // Track the click asynchronously (don't block navigation)
       fetch('/api/analytics/link-click', {
@@ -71,7 +78,7 @@ export default function LinkCard({ title, url, username }: LinkCardProps) {
       } catch (error) {
         console.error('Error fetching thumbnail from API:', error);
       }
-      
+
       // Step 2: Fallback to favicon if API didn't return a thumbnail
       tryFaviconFallback();
     };
@@ -110,11 +117,11 @@ export default function LinkCard({ title, url, username }: LinkCardProps) {
       className="block w-full group"
       onClick={handleLinkClick}
     >
-      <div className="bg-bg-primary rounded-2xl p-4 md:p-5 hover:shadow-lg hover:scale-[1.02] transition-all duration-200 flex items-start md:items-center gap-3 md:gap-4 border-2 border-transparent hover:border-accent/30 relative">
+      <div className={`${styles.linkBg} ${styles.linkRounded} p-4 md:p-5 ${styles.linkHover} transition-all duration-200 flex items-start md:items-center gap-3 md:gap-4 ${styles.linkBorder} md:border-2 border relative ${styles.linkShadow}`}>
         {/* Thumbnail - Larger on mobile */}
         <div className="flex-shrink-0">
           {thumbnail && !loading ? (
-            <div className="w-20 h-20 md:w-16 md:h-16 rounded-xl overflow-hidden bg-white flex items-center justify-center border-2 border-accent/20 shadow-sm">
+            <div className={`w-20 h-20 md:w-16 md:h-16 rounded-xl overflow-hidden bg-white flex items-center justify-center border-2 ${styles.profileBorder} shadow-sm`}>
               <img
                 src={thumbnail}
                 alt={title}
@@ -138,7 +145,7 @@ export default function LinkCard({ title, url, username }: LinkCardProps) {
               />
             </div>
           ) : (
-            <div className="w-20 h-20 md:w-16 md:h-16 rounded-xl bg-white flex items-center justify-center border-2 border-accent/20 shadow-sm">
+            <div className={`w-20 h-20 md:w-16 md:h-16 rounded-xl bg-white flex items-center justify-center border-2 ${styles.profileBorder} shadow-sm`}>
               {loading ? (
                 <div className="w-8 h-8 md:w-6 md:h-6 border-2 border-accent/30 border-t-accent rounded-full animate-spin"></div>
               ) : (
@@ -151,20 +158,20 @@ export default function LinkCard({ title, url, username }: LinkCardProps) {
 
         {/* Link Content - Allows wrapping on mobile and desktop */}
         <div className="flex-1 min-w-0 pr-8 md:pr-12">
-          <h3 className="text-xl md:text-lg font-bold md:font-semibold text-text-primary leading-tight mb-1.5 md:mb-1 break-words line-clamp-2">
+          <h3 className={`text-xl md:text-lg font-bold md:font-semibold ${styles.linkText} leading-tight mb-1.5 md:mb-1 break-words line-clamp-2`}>
             {title}
           </h3>
-          <p className="text-base md:text-sm text-text-primary/50 truncate font-medium md:font-normal flex items-center gap-1.5">
-            <Globe className="text-text-primary/30 flex-shrink-0" size={14} />
+          <p className={`text-base md:text-sm ${styles.textSecondary} truncate font-medium md:font-normal flex items-center gap-1.5`}>
+            <Globe className="opacity-50 flex-shrink-0" size={14} />
             <span>{url.replace(/^https?:\/\//, '').replace(/^www\./, '').split('/')[0]}</span>
           </p>
         </div>
 
         {/* External Link Icon - Always visible on both mobile and desktop */}
         <div className="absolute top-4 right-4 md:relative md:top-auto md:right-auto flex-shrink-0">
-          <ExternalLink 
-            className="text-accent opacity-100 transition-opacity" 
-            size={22} 
+          <ExternalLink
+            className={`${styles.textPrimary} opacity-100 transition-opacity`}
+            size={22}
           />
         </div>
       </div>

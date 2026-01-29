@@ -4,18 +4,21 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
-import { Plus, X, ArrowLeft, Upload, CheckCircle, AlertCircle } from 'lucide-react';
+import { Plus, X, ArrowLeft, Upload, CheckCircle, AlertCircle, Palette } from 'lucide-react';
 import { Link as LinkType, UserPage } from '@/types';
 import AuthGuard from '@/components/AuthGuard';
 import EmojiPicker from '@/components/EmojiPicker';
 import { ADMIN_NAMES } from '@/lib/admins';
+import { THEMES, DEFAULT_THEME, ThemeType } from '@/lib/themes';
 
 function EditUserContent({ params }: { params: { username: string } }) {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [username, setUsername] = useState(params.username);
+  const [username, setUsername] = useState(params.username);
   const [usernameError, setUsernameError] = useState<string | null>(null);
   const [listedBy, setListedBy] = useState<string>('');
+  const [theme, setTheme] = useState<ThemeType>(DEFAULT_THEME);
   const [profilePicture, setProfilePicture] = useState('');
   const [profilePictureFile, setProfilePictureFile] = useState<File | null>(null);
   const [bio, setBio] = useState('');
@@ -45,6 +48,9 @@ function EditUserContent({ params }: { params: { username: string } }) {
         const user: UserPage = data.user;
         setUsername(user.username);
         setListedBy(user.listedBy || '');
+        setProfilePicture(user.profilePicture);
+        setListedBy(user.listedBy || '');
+        setTheme((user.theme as ThemeType) || DEFAULT_THEME);
         setProfilePicture(user.profilePicture);
         setBio(user.bio);
         setLinks(user.links);
@@ -232,8 +238,10 @@ function EditUserContent({ params }: { params: { username: string } }) {
         username: username,
         profilePicture: finalProfilePictureUrl,
         bio,
+        bio,
         links: linksToSave,
         listedBy: listedBy || null,
+        theme: theme || DEFAULT_THEME,
       };
 
       console.log('Request body:', JSON.stringify(requestBody, null, 2));
@@ -542,6 +550,36 @@ function EditUserContent({ params }: { params: { username: string } }) {
                 </select>
                 <p className="text-sm text-text-primary/60 mt-2">
                   You must identify yourself to edit this profile
+                </p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-text-primary mb-2">
+                  Profile Theme
+                </label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                    <Palette className="text-text-primary/40" size={20} />
+                  </div>
+                  <select
+                    value={theme}
+                    onChange={(e) => setTheme(e.target.value as ThemeType)}
+                    className="w-full pl-12 pr-4 py-3 border border-accent/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-accent/50 text-text-primary bg-white appearance-none"
+                  >
+                    {Object.values(THEMES).map((t) => (
+                      <option key={t.id} value={t.id}>
+                        {t.name} - {t.description}
+                      </option>
+                    ))}
+                  </select>
+                  <div className="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none">
+                    <svg className="w-4 h-4 text-text-primary/40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </div>
+                </div>
+                <p className="text-sm text-text-primary/60 mt-2">
+                  Choose a visual style for this profile
                 </p>
               </div>
 

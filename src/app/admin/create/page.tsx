@@ -4,18 +4,20 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
-import { Plus, X, ArrowLeft, Upload } from 'lucide-react';
+import { Plus, X, ArrowLeft, Upload, Palette } from 'lucide-react';
 import { Link as LinkType } from '@/types';
 import AuthGuard from '@/components/AuthGuard';
 import EmojiPicker from '@/components/EmojiPicker';
 import { sanitizeUsername, validateUsername } from '@/lib/username-validation';
 import { ADMIN_NAMES } from '@/lib/admins';
+import { THEMES, DEFAULT_THEME, ThemeType } from '@/lib/themes';
 
 function CreateUserContent() {
   const router = useRouter();
   const [username, setUsername] = useState('');
   const [usernameError, setUsernameError] = useState<string | null>(null);
   const [listedBy, setListedBy] = useState<string>('');
+  const [theme, setTheme] = useState<ThemeType>(DEFAULT_THEME);
   const [profilePicture, setProfilePicture] = useState('');
   const [profilePictureFile, setProfilePictureFile] = useState<File | null>(null);
   const [bio, setBio] = useState('');
@@ -138,6 +140,7 @@ function CreateUserContent() {
           bio,
           links: links.filter((link) => link.title && link.url),
           listedBy: listedBy || null,
+          theme: theme,
         }),
       });
 
@@ -208,8 +211,8 @@ function CreateUserContent() {
                   onChange={handleUsernameChange}
                   placeholder="e.g., renebachmeier776"
                   className={`w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 text-text-primary ${usernameError
-                      ? 'border-red-300 focus:ring-red-500'
-                      : 'border-accent/20 focus:ring-accent/50'
+                    ? 'border-red-300 focus:ring-red-500'
+                    : 'border-accent/20 focus:ring-accent/50'
                     }`}
                   required
                 />
@@ -315,6 +318,36 @@ function CreateUserContent() {
                   rows={4}
                   className="w-full px-4 py-3 border border-accent/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-accent/50 text-text-primary resize-none"
                 />
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-text-primary mb-2">
+                  Profile Theme
+                </label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                    <Palette className="text-text-primary/40" size={20} />
+                  </div>
+                  <select
+                    value={theme}
+                    onChange={(e) => setTheme(e.target.value as ThemeType)}
+                    className="w-full pl-12 pr-4 py-3 border border-accent/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-accent/50 text-text-primary bg-white appearance-none"
+                  >
+                    {Object.values(THEMES).map((t) => (
+                      <option key={t.id} value={t.id}>
+                        {t.name} - {t.description}
+                      </option>
+                    ))}
+                  </select>
+                  <div className="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none">
+                    <svg className="w-4 h-4 text-text-primary/40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </div>
+                </div>
+                <p className="text-sm text-text-primary/60 mt-2">
+                  Choose a visual style for this profile
+                </p>
               </div>
             </div>
           </div>

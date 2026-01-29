@@ -88,6 +88,7 @@ export async function readUsers(): Promise<UserPage[]> {
         }))
         .sort((a: Link, b: Link) => a.order - b.order),
       listedBy: user.listed_by || null,
+      theme: user.theme || 'standard',
       createdAt: user.created_at,
       updatedAt: user.updated_at,
       deletedAt: user.deleted_at,
@@ -163,6 +164,7 @@ export async function getUser(username: string): Promise<UserPage | null> {
       bio: user.bio || '',
       links: processedLinks,
       listedBy: user.listed_by || null,
+      theme: user.theme || 'standard',
       createdAt: user.created_at || new Date().toISOString(),
       updatedAt: user.updated_at || new Date().toISOString(),
       deletedAt: user.deleted_at,
@@ -181,6 +183,7 @@ export async function saveUser(
     bio: string;
     links: Link[];
     listedBy?: string | null;
+    theme?: string;
   }
 ): Promise<UserPage | null> {
   try {
@@ -215,6 +218,11 @@ export async function saveUser(
       // Only update listed_by if provided
       if (userData.listedBy !== undefined) {
         updateData.listed_by = userData.listedBy || null;
+      }
+
+      // Update theme if provided
+      if (userData.theme) {
+        updateData.theme = userData.theme;
       }
 
       const { data: updatedUser, error: updateError } = await supabase
@@ -254,6 +262,7 @@ export async function saveUser(
           profile_picture: userData.profilePicture || null,
           bio: userData.bio || null,
           listed_by: userData.listedBy || null,
+          theme: userData.theme || 'standard',
         })
         .select()
         .single();

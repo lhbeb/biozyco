@@ -21,7 +21,7 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { username, profilePicture, bio, links, listedBy } = body;
+    const { username, profilePicture, bio, links, listedBy, theme } = body;
 
     if (!username || typeof username !== 'string') {
       return NextResponse.json({ error: 'Username is required' }, { status: 400 });
@@ -65,6 +65,7 @@ export async function POST(request: NextRequest) {
       bio: bio || '',
       links: validLinks,
       listedBy: listedBy || null,
+      theme: theme || 'standard',
     };
 
     console.log('Saving user:', normalizedUsername, 'with', validLinks.length, 'links');

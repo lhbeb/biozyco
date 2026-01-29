@@ -11,6 +11,7 @@ export interface UserPage {
   bio: string;
   links: Link[];
   listedBy?: string | null;
+  theme?: string;
   createdAt: string;
   updatedAt: string;
   deletedAt?: string | null;
