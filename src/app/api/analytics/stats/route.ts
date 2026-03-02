@@ -27,26 +27,27 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ stats: {} });
     }
 
-    // Initialize stats to zero for all users
+    // Run all per-user COUNT queries in parallel via Promise.all.
+    // Using count: 'exact' + head: true means Supabase returns only the COUNT
+    // from the DB — zero rows are transferred, so there is NO row/1000 limit.
+    // All N queries fire simultaneously, resolving in ~the time of the slowest one.
+    const results = await Promise.all(
+      usernameList.map((username) =>
+        supabase
+          .from('page_views')
+          .select('*', { count: 'exact', head: true })
+          .eq('username', username)
+          .then(({ count, error }) => ({ username, count: count ?? 0, error }))
+      )
+    );
+
     const stats: { [username: string]: number } = {};
-    usernameList.forEach((u) => { stats[u] = 0; });
-
-    // Single DB call for all usernames using .in() — fetches only the username column
-    // This replaces the old sequential for-loop (N roundtrips → 1 roundtrip)
-    const { data, error } = await supabase
-      .from('page_views')
-      .select('username')
-      .in('username', usernameList);
-
-    if (error) {
-      console.error('Error fetching view stats:', error);
-      return NextResponse.json({ stats });
-    }
-
-    // Aggregate counts in JS — fast since we only fetch the username column
-    data?.forEach((row) => {
-      if (stats[row.username] !== undefined) {
-        stats[row.username]++;
+    results.forEach(({ username, count, error }) => {
+      if (error) {
+        console.error(`Error counting views for ${username}:`, error);
+        stats[username] = 0;
+      } else {
+        stats[username] = count;
       }
     });
 
