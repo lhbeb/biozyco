@@ -113,7 +113,7 @@ export default function LinkCard({ title, url, username, themeId = DEFAULT_THEME
     <a
       href={url}
       target="_blank"
-      rel="noopener noreferrer"
+      rel="noopener"
       className="block w-full group"
       onClick={handleLinkClick}
     >
