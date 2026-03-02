@@ -30,13 +30,6 @@ function AdminDashboardContent() {
   }, []);
 
   useEffect(() => {
-    if (users.length > 0) {
-      fetchViewStats();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [users.length]);
-
-  useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
         setOpenMenuUsername(null);
@@ -51,7 +44,13 @@ function AdminDashboardContent() {
     try {
       const response = await fetch('/api/users');
       const data = await response.json();
-      setUsers(data.users || []);
+      const activeUsers = data.users || [];
+      setUsers(activeUsers);
+
+      // Fetch view stats immediately after users load — no extra render cycle
+      if (activeUsers.length > 0) {
+        fetchViewStats(activeUsers);
+      }
     } catch (error) {
       console.error('Error fetching users:', error);
     } finally {
@@ -69,9 +68,10 @@ function AdminDashboardContent() {
     }
   };
 
-  const fetchViewStats = async () => {
+  const fetchViewStats = async (activeUsers = users) => {
     try {
-      const usernames = users.map((u) => u.username).join(',');
+      const usernames = activeUsers.map((u) => u.username).join(',');
+      if (!usernames) return;
       const response = await fetch(`/api/analytics/stats?usernames=${encodeURIComponent(usernames)}`);
       if (response.ok) {
         const data = await response.json();

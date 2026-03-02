@@ -16,50 +16,58 @@ export async function GET(
   try {
     const { username } = await params;
 
-    // Get total views count
-    const { count: totalViews, error: countError } = await supabase
-      .from('page_views')
-      .select('*', { count: 'exact', head: true })
-      .eq('username', username);
+    // Run all three queries in parallel — no sequential waterfall
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
-    if (countError) {
-      console.error('Error counting views:', countError);
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
+    const [totalResult, countryResult, recentResult, dailyResult] = await Promise.all([
+      // 1. Total views count — uses DB count, no rows transferred
+      supabase
+        .from('page_views')
+        .select('*', { count: 'exact', head: true })
+        .eq('username', username),
+
+      // 2. Country breakdown — fetch only needed columns, single query (no while-loop)
+      //    Capped at 5000 rows which is more than enough per user
+      supabase
+        .from('page_views')
+        .select('country, country_code')
+        .eq('username', username)
+        .limit(5000),
+
+      // 3. Recent views (last 30 days, latest 100)
+      supabase
+        .from('page_views')
+        .select('*')
+        .eq('username', username)
+        .gte('viewed_at', thirtyDaysAgo.toISOString())
+        .order('viewed_at', { ascending: false })
+        .limit(100),
+
+      // 4. Daily views for chart (last 7 days) — only viewed_at column needed
+      supabase
+        .from('page_views')
+        .select('viewed_at')
+        .eq('username', username)
+        .gte('viewed_at', sevenDaysAgo.toISOString())
+        .limit(5000),
+    ]);
+
+    // Handle total count
+    if (totalResult.error) {
+      console.error('Error counting views:', totalResult.error);
       return NextResponse.json(
         { error: 'Failed to fetch analytics' },
         { status: 500 }
       );
     }
 
-    // Get views grouped by country with pagination to handle large datasets
-    let countryData: any[] = [];
-    let hasMore = true;
-    let offset = 0;
-    const pageSize = 1000;
-
-    while (hasMore) {
-      const { data, error } = await supabase
-        .from('page_views')
-        .select('country, country_code')
-        .eq('username', username)
-        .range(offset, offset + pageSize - 1);
-
-      if (error) {
-        console.error('Error fetching country data:', error);
-        break;
-      }
-
-      if (data && data.length > 0) {
-        countryData = countryData.concat(data);
-        offset += pageSize;
-        hasMore = data.length === pageSize;
-      } else {
-        hasMore = false;
-      }
-    }
-
-    // Count views by country
+    // Aggregate country stats in JS
     const countryStats: { [key: string]: { country: string; code: string; count: number } } = {};
-    countryData.forEach((view) => {
+    countryResult.data?.forEach((view) => {
       const key = view.country_code || 'UN';
       if (!countryStats[key]) {
         countryStats[key] = {
@@ -71,64 +79,18 @@ export async function GET(
       countryStats[key].count++;
     });
 
-    // Get recent views (last 30 days)
-    const thirtyDaysAgo = new Date();
-    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-
-    const { data: recentViews, error: recentError } = await supabase
-      .from('page_views')
-      .select('*')
-      .eq('username', username)
-      .gte('viewed_at', thirtyDaysAgo.toISOString())
-      .order('viewed_at', { ascending: false })
-      .limit(100);
-
-    if (recentError) {
-      console.error('Error fetching recent views:', recentError);
-    }
-
-    // Get views by date (last 7 days) with pagination
-    const sevenDaysAgo = new Date();
-    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-
-    let dailyViews: any[] = [];
-    let hasMoreDaily = true;
-    let dailyOffset = 0;
-
-    while (hasMoreDaily) {
-      const { data, error } = await supabase
-        .from('page_views')
-        .select('viewed_at')
-        .eq('username', username)
-        .gte('viewed_at', sevenDaysAgo.toISOString())
-        .range(dailyOffset, dailyOffset + pageSize - 1);
-
-      if (error) {
-        console.error('Error fetching daily views:', error);
-        break;
-      }
-
-      if (data && data.length > 0) {
-        dailyViews = dailyViews.concat(data);
-        dailyOffset += pageSize;
-        hasMoreDaily = data.length === pageSize;
-      } else {
-        hasMoreDaily = false;
-      }
-    }
-
-    // Group by date
+    // Aggregate daily stats in JS
     const dailyStats: { [key: string]: number } = {};
-    dailyViews.forEach((view) => {
+    dailyResult.data?.forEach((view) => {
       const date = new Date(view.viewed_at).toISOString().split('T')[0];
       dailyStats[date] = (dailyStats[date] || 0) + 1;
     });
 
     return NextResponse.json({
       username,
-      totalViews: totalViews || 0,
+      totalViews: totalResult.count || 0,
       countries: Object.values(countryStats).sort((a, b) => b.count - a.count),
-      recentViews: recentViews || [],
+      recentViews: recentResult.data || [],
       dailyStats,
     });
   } catch (error: any) {
@@ -139,4 +101,3 @@ export async function GET(
     );
   }
 }
-

@@ -109,9 +109,13 @@ export default function LinkCard({ title, url, username, themeId = DEFAULT_THEME
     fetchThumbnail();
   }, [url]);
 
+  // Build the redirect URL that routes through biozy.co/go
+  // This ensures hoodfair.com and similar sites see Referer: https://biozy.co/go
+  const redirectUrl = `/go?url=${encodeURIComponent(url)}`;
+
   return (
     <a
-      href={url}
+      href={redirectUrl}
       target="_blank"
       rel="noopener"
       className="block w-full group"

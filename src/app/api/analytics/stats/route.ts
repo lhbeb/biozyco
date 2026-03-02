@@ -27,24 +27,28 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ stats: {} });
     }
 
-    // Initialize stats object
+    // Initialize stats to zero for all users
     const stats: { [username: string]: number } = {};
-    
-    // Get view counts for each username using count aggregation
-    // This is more efficient and has no row limit
-    for (const username of usernameList) {
-      const { count, error } = await supabase
-        .from('page_views')
-        .select('*', { count: 'exact', head: true })
-        .eq('username', username);
+    usernameList.forEach((u) => { stats[u] = 0; });
 
-      if (error) {
-        console.error(`Error fetching view stats for ${username}:`, error);
-        stats[username] = 0;
-      } else {
-        stats[username] = count || 0;
-      }
+    // Single DB call for all usernames using .in() — fetches only the username column
+    // This replaces the old sequential for-loop (N roundtrips → 1 roundtrip)
+    const { data, error } = await supabase
+      .from('page_views')
+      .select('username')
+      .in('username', usernameList);
+
+    if (error) {
+      console.error('Error fetching view stats:', error);
+      return NextResponse.json({ stats });
     }
+
+    // Aggregate counts in JS — fast since we only fetch the username column
+    data?.forEach((row) => {
+      if (stats[row.username] !== undefined) {
+        stats[row.username]++;
+      }
+    });
 
     return NextResponse.json({ stats });
   } catch (error: any) {
@@ -55,4 +59,3 @@ export async function GET(request: NextRequest) {
     );
   }
 }
-
