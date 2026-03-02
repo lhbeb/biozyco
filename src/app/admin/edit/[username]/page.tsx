@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
-import { Plus, X, ArrowLeft, Upload, CheckCircle, AlertCircle, Palette } from 'lucide-react';
+import { Plus, X, ArrowLeft, Upload, CheckCircle, AlertCircle, Palette, GripVertical } from 'lucide-react';
 import { Link as LinkType, UserPage } from '@/types';
 import AuthGuard from '@/components/AuthGuard';
 import EmojiPicker from '@/components/EmojiPicker';
@@ -26,6 +26,9 @@ function EditUserContent({ params }: { params: { username: string } }) {
   const [uploading, setUploading] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
+  // Drag-and-drop state
+  const [dragId, setDragId] = useState<string | null>(null);
+  const [dragOverId, setDragOverId] = useState<string | null>(null);
 
   useEffect(() => {
     fetchUser();
@@ -109,6 +112,44 @@ function EditUserContent({ params }: { params: { username: string } }) {
   const removeLink = (id: string) => {
     setLinks((prevLinks) => prevLinks.filter((link) => link.id !== id));
   };
+
+  // ── Drag-and-drop handlers ────────────────────────────────────────────────
+  const handleDragStart = (e: React.DragEvent, id: string) => {
+    setDragId(id);
+    e.dataTransfer.effectAllowed = 'move';
+  };
+
+  const handleDragOver = (e: React.DragEvent, id: string) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    if (id !== dragId) setDragOverId(id);
+  };
+
+  const handleDrop = (e: React.DragEvent, targetId: string) => {
+    e.preventDefault();
+    if (!dragId || dragId === targetId) {
+      setDragId(null);
+      setDragOverId(null);
+      return;
+    }
+    setLinks((prev) => {
+      const items = [...prev];
+      const fromIdx = items.findIndex((l) => l.id === dragId);
+      const toIdx = items.findIndex((l) => l.id === targetId);
+      const [moved] = items.splice(fromIdx, 1);
+      items.splice(toIdx, 0, moved);
+      // Re-assign order values to match new positions
+      return items.map((l, i) => ({ ...l, order: i }));
+    });
+    setDragId(null);
+    setDragOverId(null);
+  };
+
+  const handleDragEnd = () => {
+    setDragId(null);
+    setDragOverId(null);
+  };
+  // ─────────────────────────────────────────────────────────────────────────
 
   const handleUsernameChange = (newUsername: string) => {
     setUsername(newUsername);
@@ -620,12 +661,30 @@ function EditUserContent({ params }: { params: { username: string } }) {
                 </button>
               </div>
             ) : (
-              <div className="space-y-4">
+              <div className="space-y-3">
                 {links.map((link, index) => (
                   <div
                     key={link.id}
-                    className="flex gap-4 p-4 border border-accent/20 rounded-xl hover:border-accent/40 transition-colors"
+                    draggable
+                    onDragStart={(e) => handleDragStart(e, link.id)}
+                    onDragOver={(e) => handleDragOver(e, link.id)}
+                    onDrop={(e) => handleDrop(e, link.id)}
+                    onDragEnd={handleDragEnd}
+                    className={`flex gap-3 p-4 border rounded-xl transition-all duration-150 ${dragOverId === link.id
+                        ? 'border-t-2 border-t-accent border-accent/40 bg-accent/5 scale-[1.01]'
+                        : dragId === link.id
+                          ? 'opacity-40 border-accent/20'
+                          : 'border-accent/20 hover:border-accent/40'
+                      }`}
                   >
+                    {/* Drag handle */}
+                    <div
+                      className="flex items-center self-stretch px-1 cursor-grab active:cursor-grabbing text-text-primary/30 hover:text-accent transition-colors flex-shrink-0"
+                      title="Drag to reorder"
+                    >
+                      <GripVertical size={20} />
+                    </div>
+
                     <div className="flex-1 space-y-3">
                       <div className="relative">
                         <input
@@ -647,10 +706,11 @@ function EditUserContent({ params }: { params: { username: string } }) {
                         className="w-full px-4 py-2 border border-accent/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/50 text-text-primary"
                       />
                     </div>
+
                     <button
                       type="button"
                       onClick={() => removeLink(link.id)}
-                      className="p-2 hover:bg-red-50 rounded-lg transition-colors h-fit"
+                      className="p-2 hover:bg-red-50 rounded-lg transition-colors h-fit self-start mt-1"
                     >
                       <X className="text-text-primary/60 hover:text-red-600" size={20} />
                     </button>
