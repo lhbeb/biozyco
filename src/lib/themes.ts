@@ -12,18 +12,18 @@ export interface ThemeConfig {
         textPrimary: string;
         textSecondary: string;
         // Profile Section
-        profileBorder: string; // Border around profile pic
+        profileBorder: string;
         profileShadow: string;
-        // Main Content Card (The container holding bio and links)
+        // Main Content Card
         cardBg: string;
         cardBorder: string;
         cardShadow: string;
         cardRounded: string;
         // Link Buttons
-        linkBg: string; // Background of individual links
+        linkBg: string;
         linkText: string;
         linkBorder: string;
-        linkHover: string; // Hover effects
+        linkHover: string;
         linkRounded: string;
         linkShadow: string;
         // Footer
@@ -35,31 +35,36 @@ export const THEMES: Record<ThemeType, ThemeConfig> = {
     standard: {
         id: 'standard',
         name: 'Standard',
-        description: 'The classic Biozy look with mint green accents.',
+        description: 'The classic Biozy look with fresh emerald accents.',
         styles: {
-            background: 'bg-[#e8f7ee]',
-            textPrimary: 'text-[#374151]',
-            textSecondary: 'text-[#374151]/70',
-            profileBorder: 'border-[#17803d]/20',
-            profileShadow: 'shadow-lg',
+            // Soft sage-to-white gradient page
+            background: 'bg-gradient-to-b from-[#eaf7f0] to-[#f5fdf8]',
+            textPrimary: 'text-[#1a2e1e]',
+            textSecondary: 'text-[#4a6b52]',
+            profileBorder: 'border-[#17803d]/25',
+            profileShadow: 'shadow-xl shadow-emerald-100/80',
+            // Crisp white card with subtle emerald tint on edges
             cardBg: 'bg-white',
-            cardBorder: 'border-transparent',
-            cardShadow: 'shadow-xl',
+            cardBorder: 'border-emerald-100/80 border',
+            cardShadow: 'shadow-2xl shadow-emerald-100/60',
             cardRounded: 'rounded-3xl',
+            // White link cards — turn accent green on hover
             linkBg: 'bg-white',
-            linkText: 'text-[#374151]',
-            linkBorder: 'border-[#17803d]/20',
-            linkHover: 'hover:border-[#17803d]/40 hover:shadow-md hover:scale-[1.01]',
-            linkRounded: 'rounded-xl',
-            linkShadow: 'shadow-sm',
-            footerText: 'text-[#374151]/50',
+            linkText: 'text-[#1a2e1e] font-semibold group-hover:text-[#17803d]',
+            linkBorder: 'border-emerald-100',
+            linkHover: 'hover:border-emerald-400 hover:shadow-lg hover:shadow-emerald-100/80 hover:scale-[1.015]',
+            linkRounded: 'rounded-2xl',
+            linkShadow: 'shadow-sm shadow-emerald-50',
+            footerText: 'text-[#4a6b52]/55',
         },
     },
+
     minimal: {
         id: 'minimal',
         name: 'Minimalist',
-        description: 'Clean, stark white and black. No clutter.',
+        description: 'Editorial black and white. Bold. No clutter.',
         styles: {
+            // Pure white — maximally clean
             background: 'bg-white',
             textPrimary: 'text-black',
             textSecondary: 'text-gray-500 group-hover:text-white/70',
@@ -69,81 +74,94 @@ export const THEMES: Record<ThemeType, ThemeConfig> = {
             cardBorder: 'border-transparent',
             cardShadow: 'shadow-none',
             cardRounded: 'rounded-none',
-            linkBg: 'bg-gray-50',
-            linkText: 'text-black font-medium group-hover:text-white',
-            linkBorder: 'border-black border-2',
-            linkHover: 'hover:bg-black transition-all duration-300',
-            linkRounded: 'rounded-none',
+            // White cards, flat black offset shadow, full invert on hover
+            linkBg: 'bg-white',
+            linkText: 'text-black font-bold tracking-tight group-hover:text-white',
+            linkBorder: 'border-black',
+            linkHover: 'hover:bg-black transition-all duration-200',
+            linkRounded: 'rounded-sm',
             linkShadow: 'shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]',
             footerText: 'text-gray-400',
         },
     },
+
     dark: {
         id: 'dark',
         name: 'Midnight',
-        description: 'Sleek dark mode for night owls.',
+        description: 'Deep space dark mode with indigo accents.',
         styles: {
-            background: 'bg-slate-900',
-            textPrimary: 'text-white',
+            // Near-black deep navy
+            background: 'bg-[#07090f]',
+            textPrimary: 'text-slate-100',
             textSecondary: 'text-slate-400',
-            profileBorder: 'border-slate-700',
-            profileShadow: 'shadow-2xl shadow-black/50',
-            cardBg: 'bg-slate-800',
-            cardBorder: 'border-slate-700 border',
-            cardShadow: 'shadow-2xl',
-            cardRounded: 'rounded-2xl',
-            linkBg: 'bg-slate-700',
-            linkText: 'text-slate-100',
-            linkBorder: 'border-slate-600',
-            linkHover: 'hover:bg-slate-600 hover:border-slate-500',
-            linkRounded: 'rounded-lg',
-            linkShadow: 'shadow-lg',
-            footerText: 'text-slate-600',
+            profileBorder: 'border-indigo-500/50',
+            profileShadow: 'shadow-2xl shadow-indigo-900/60',
+            // Dark navy card with subtle indigo border
+            cardBg: 'bg-[#0e1420]',
+            cardBorder: 'border-indigo-900/60 border',
+            cardShadow: 'shadow-2xl shadow-black/70',
+            cardRounded: 'rounded-3xl',
+            // Dark link cards — fill indigo on hover
+            linkBg: 'bg-[#141d2e]',
+            linkText: 'text-slate-100 font-semibold group-hover:text-white',
+            linkBorder: 'border-indigo-900/50',
+            linkHover: 'hover:bg-indigo-600 hover:border-indigo-500 hover:shadow-xl hover:shadow-indigo-900/50 hover:scale-[1.015]',
+            linkRounded: 'rounded-2xl',
+            linkShadow: 'shadow-lg shadow-black/40',
+            footerText: 'text-slate-700',
         },
     },
+
     neon: {
         id: 'neon',
         name: 'Neon Night',
-        description: 'Cyberpunk inspired with glowing effects.',
+        description: 'Synthwave cyberpunk. Hot pink meets electric cyan.',
         styles: {
-            background: 'bg-black',
-            textPrimary: 'text-pink-500 drop-shadow-[0_0_5px_rgba(236,72,153,0.5)]',
-            textSecondary: 'text-purple-400',
-            profileBorder: 'border-pink-500',
-            profileShadow: 'shadow-[0_0_20px_rgba(236,72,153,0.5)]',
-            cardBg: 'bg-gray-900/80 backdrop-blur-sm',
-            cardBorder: 'border-purple-500/50 border',
-            cardShadow: 'shadow-[0_0_30px_rgba(168,85,247,0.2)]',
-            cardRounded: 'rounded-xl',
-            linkBg: 'bg-black',
-            linkText: 'text-cyan-400 font-bold tracking-wide',
-            linkBorder: 'border-cyan-500',
-            linkHover: 'hover:bg-cyan-950 hover:shadow-[0_0_15px_rgba(6,182,212,0.5)] hover:border-cyan-400',
+            // Deep purple-black void
+            background: 'bg-[#0d001a]',
+            textPrimary: 'text-[#ff2d78] drop-shadow-[0_0_8px_rgba(255,45,120,0.7)]',
+            textSecondary: 'text-[#b060ff] group-hover:text-black/70',
+            profileBorder: 'border-[#ff2d78]',
+            profileShadow: 'shadow-[0_0_30px_rgba(255,45,120,0.65)]',
+            // Dark translucent card with pink glow border
+            cardBg: 'bg-[#12002a]/90 backdrop-blur-sm',
+            cardBorder: 'border-[#ff2d78]/35 border',
+            cardShadow: 'shadow-[0_0_50px_rgba(255,45,120,0.18)]',
+            cardRounded: 'rounded-2xl',
+            // Black links with cyan glow — fill cyan on hover (text flips black)
+            linkBg: 'bg-[#0d001a]',
+            linkText: 'text-[#00fff0] font-bold tracking-widest group-hover:text-black',
+            linkBorder: 'border-[#00fff0]/55',
+            linkHover: 'hover:bg-[#00fff0] hover:border-[#00fff0] hover:shadow-[0_0_25px_rgba(0,255,240,0.65)]',
             linkRounded: 'rounded-lg',
-            linkShadow: 'shadow-[0_0_5px_rgba(6,182,212,0.3)]',
-            footerText: 'text-gray-600',
+            linkShadow: 'shadow-[0_0_10px_rgba(0,255,240,0.35)]',
+            footerText: 'text-[#ff2d78]/30',
         },
     },
+
     glass: {
         id: 'glass',
         name: 'Glassmorphism',
-        description: 'Modern frosted glass effect over a colorful gradient.',
+        description: 'Aurora glassmorphism over an indigo-to-violet gradient.',
         styles: {
-            background: 'bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500',
+            // Rich aurora gradient sky
+            background: 'bg-gradient-to-br from-[#0ea5e9] via-[#6366f1] to-[#a855f7]',
             textPrimary: 'text-white',
-            textSecondary: 'text-white/80',
-            profileBorder: 'border-white/30',
-            profileShadow: 'shadow-xl',
-            cardBg: 'bg-white/10 backdrop-blur-md',
-            cardBorder: 'border-white/20 border',
-            cardShadow: 'shadow-2xl',
-            cardRounded: 'rounded-[40px]',
-            linkBg: 'bg-white/20 hover:bg-white/30 backdrop-blur',
-            linkText: 'text-white font-semibold',
-            linkBorder: 'border-white/30',
-            linkHover: 'hover:scale-105 transition-transform duration-300',
+            textSecondary: 'text-white/75',
+            profileBorder: 'border-white/40',
+            profileShadow: 'shadow-2xl shadow-indigo-900/30',
+            // Frosted glass card
+            cardBg: 'bg-white/15 backdrop-blur-2xl',
+            cardBorder: 'border-white/25 border',
+            cardShadow: 'shadow-2xl shadow-black/20',
+            cardRounded: 'rounded-[36px]',
+            // Frosted glass links — brighten on hover
+            linkBg: 'bg-white/15 backdrop-blur-sm',
+            linkText: 'text-white font-semibold group-hover:text-white',
+            linkBorder: 'border-white/25',
+            linkHover: 'hover:bg-white/30 hover:border-white/50 hover:shadow-xl hover:shadow-white/15 hover:scale-[1.02]',
             linkRounded: 'rounded-2xl',
-            linkShadow: 'shadow-lg',
+            linkShadow: 'shadow-lg shadow-black/10',
             footerText: 'text-white/40',
         },
     },
