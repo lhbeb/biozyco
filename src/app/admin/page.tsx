@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
-import { Link2, Plus, Edit, Trash2, Eye, Users, LogOut, Copy, Check, BarChart3, RefreshCw, Trash, MoreVertical } from 'lucide-react';
+import { Link2, Plus, Edit, Trash2, Eye, Users, LogOut, Copy, Check, BarChart3, RefreshCw, Trash, MoreVertical, Search, X } from 'lucide-react';
 import { UserPage } from '@/types';
 import AuthGuard from '@/components/AuthGuard';
 import { clearSession } from '@/lib/auth';
@@ -23,6 +23,11 @@ function AdminDashboardContent() {
   const [viewStats, setViewStats] = useState<{ [username: string]: number }>({});
   const [analyticsUsername, setAnalyticsUsername] = useState<string | null>(null);
   const [openMenuUsername, setOpenMenuUsername] = useState<string | null>(null);
+
+  // Search & filter state
+  const [searchQuery, setSearchQuery] = useState('');
+  const [sortBy, setSortBy] = useState<'newest' | 'oldest' | 'highest-views'>('newest');
+  const [filterListedBy, setFilterListedBy] = useState('');
 
   useEffect(() => {
     fetchUsers();
@@ -224,6 +229,40 @@ function AdminDashboardContent() {
 
   const currentUsers = activeTab === 'active' ? users : deletedUsers;
 
+  // Deduplicated list of "listed by" values for the filter dropdown
+  const listedByOptions = Array.from(
+    new Set(users.map((u) => u.listedBy ?? '').filter(Boolean))
+  ).sort();
+
+  // Filtered + sorted active users
+  const filteredUsers = users
+    .filter((u) => {
+      const q = searchQuery.toLowerCase();
+      const matchesSearch =
+        !q ||
+        u.username.toLowerCase().includes(q) ||
+        (u.bio || '').toLowerCase().includes(q);
+      const matchesListedBy =
+        !filterListedBy ||
+        (filterListedBy === '__unassigned__'
+          ? !u.listedBy
+          : u.listedBy === filterListedBy);
+      return matchesSearch && matchesListedBy;
+    })
+    .sort((a, b) => {
+      if (sortBy === 'highest-views') {
+        return (viewStats[b.username] || 0) - (viewStats[a.username] || 0);
+      }
+      if (sortBy === 'oldest') {
+        return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+      }
+      // newest (default)
+      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+    });
+
+  const isFiltered =
+    !!searchQuery || sortBy !== 'newest' || !!filterListedBy;
+
   return (
     <div className="min-h-screen bg-bg-primary">
       {/* Header */}
@@ -351,15 +390,79 @@ function AdminDashboardContent() {
             </div>
           </div>
 
+          {/* Search & Filter bar — active tab only */}
+          {activeTab === 'active' && (
+            <div className="px-6 py-4 border-b border-accent/10 bg-bg-primary/30">
+              <div className="flex flex-col sm:flex-row gap-3">
+                {/* Search input */}
+                <div className="relative flex-1">
+                  <Search
+                    className="absolute left-3 top-1/2 -translate-y-1/2 text-text-primary/40"
+                    size={16}
+                  />
+                  <input
+                    type="text"
+                    placeholder="Search by username or bio…"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="w-full pl-9 pr-9 py-2.5 rounded-xl border border-accent/20 bg-white text-sm text-text-primary placeholder:text-text-primary/40 focus:outline-none focus:ring-2 focus:ring-accent/30 focus:border-accent/50 transition"
+                  />
+                  {searchQuery && (
+                    <button
+                      onClick={() => setSearchQuery('')}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-text-primary/40 hover:text-text-primary transition-colors"
+                    >
+                      <X size={14} />
+                    </button>
+                  )}
+                </div>
+
+                {/* Sort dropdown */}
+                <select
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value as typeof sortBy)}
+                  className="px-3 py-2.5 rounded-xl border border-accent/20 bg-white text-sm text-text-primary focus:outline-none focus:ring-2 focus:ring-accent/30 focus:border-accent/50 transition cursor-pointer"
+                >
+                  <option value="newest">⬇ Newest first</option>
+                  <option value="oldest">⬆ Oldest first</option>
+                  <option value="highest-views">📊 Highest views</option>
+                </select>
+
+                {/* Listed By dropdown */}
+                <select
+                  value={filterListedBy}
+                  onChange={(e) => setFilterListedBy(e.target.value)}
+                  className="px-3 py-2.5 rounded-xl border border-accent/20 bg-white text-sm text-text-primary focus:outline-none focus:ring-2 focus:ring-accent/30 focus:border-accent/50 transition cursor-pointer"
+                >
+                  <option value="">👤 All listed-by</option>
+                  {listedByOptions.map((lb) => (
+                    <option key={lb} value={lb}>
+                      {lb}
+                    </option>
+                  ))}
+                  <option value="__unassigned__">— Unassigned</option>
+                </select>
+              </div>
+
+              {/* Result count */}
+              {isFiltered && (
+                <p className="mt-2 text-xs text-text-primary/50">
+                  Showing <span className="font-semibold text-accent">{filteredUsers.length}</span> of{' '}
+                  <span className="font-semibold">{users.length}</span> profiles
+                </p>
+              )}
+            </div>
+          )}
+
           {/* Table Content */}
           {loading ? (
             <div className="p-12 text-center text-text-primary/60">Loading...</div>
-          ) : currentUsers.length === 0 ? (
+          ) : activeTab === 'active' && filteredUsers.length === 0 ? (
             <div className="p-12 text-center">
               <p className="text-text-primary/60 mb-4">
-                {activeTab === 'active' ? 'No active users yet' : 'No deleted profiles'}
+                {isFiltered ? 'No profiles match your search or filters.' : 'No active users yet'}
               </p>
-              {activeTab === 'active' && (
+              {!isFiltered && (
                 <Link
                   href="/admin/create"
                   className="inline-flex items-center gap-2 px-6 py-3 bg-accent text-white rounded-full font-semibold hover:bg-accent/90 transition-all"
@@ -368,6 +471,10 @@ function AdminDashboardContent() {
                   Create Your First User
                 </Link>
               )}
+            </div>
+          ) : activeTab === 'deleted' && currentUsers.length === 0 ? (
+            <div className="p-12 text-center">
+              <p className="text-text-primary/60 mb-4">No deleted profiles</p>
             </div>
           ) : (
             <div className="overflow-x-auto">
@@ -397,7 +504,7 @@ function AdminDashboardContent() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-accent/10">
-                  {currentUsers.map((user) => (
+                  {(activeTab === 'active' ? filteredUsers : currentUsers).map((user) => (
                     <tr key={user.username} className="hover:bg-bg-primary/30 transition-colors">
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
