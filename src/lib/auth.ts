@@ -1,130 +1,117 @@
-// Hardcoded credentials
-const ADMIN_EMAIL = 'elmahboubimehdi@gmail.com';
-const ADMIN_PASSWORD = 'Localserver!!2';
+// ─── Admin accounts ────────────────────────────────────────────────────────────
+// 'admin'       → regular admin, access to dashboard only
+// 'superadmin'  → full access including /admin/scripts
 
-// Session key
+export type AdminRole = 'admin' | 'superadmin';
+
+interface AdminAccount {
+  email: string;
+  password: string;
+  name: string;
+  role: AdminRole;
+}
+
+const ADMIN_ACCOUNTS: AdminAccount[] = [
+  {
+    email: 'elmahboubimehdi@gmail.com',
+    password: 'Localserver!!2',
+    name: 'Admin',
+    role: 'admin',
+  },
+  {
+    email: 'matrix01mehdi@gmail.com',
+    password: 'Mehbde!!2',
+    name: 'SuperAdmin',
+    role: 'superadmin',
+  },
+];
+
+// ─── Session ───────────────────────────────────────────────────────────────────
+
 const SESSION_KEY = 'biozy_admin_session';
-
-// Session duration: 24 hours in milliseconds
 const SESSION_DURATION = 24 * 60 * 60 * 1000; // 24 hours
 
 interface SessionData {
   authenticated: boolean;
   timestamp: number;
-  adminName?: string; // Track which admin is logged in
+  adminName: string;
+  role: AdminRole;
 }
 
-export function validateCredentials(email: string, password: string): boolean {
-  return email === ADMIN_EMAIL && password === ADMIN_PASSWORD;
+// ─── Auth functions ────────────────────────────────────────────────────────────
+
+/** Returns the matching account or null if credentials are wrong */
+export function validateCredentials(email: string, password: string): AdminAccount | null {
+  const normalizedEmail = email.trim().toLowerCase();
+  const account = ADMIN_ACCOUNTS.find(
+    (a) => a.email.toLowerCase() === normalizedEmail && a.password === password
+  );
+  return account ?? null;
 }
 
-export function setSession(adminName: string): void {
-  if (typeof window !== 'undefined') {
-    const sessionData: SessionData = {
-      authenticated: true,
-      timestamp: Date.now(),
-      adminName: adminName,
-    };
-    localStorage.setItem(SESSION_KEY, JSON.stringify(sessionData));
-  }
+export function setSession(adminName: string, role: AdminRole = 'admin'): void {
+  if (typeof window === 'undefined') return;
+  const sessionData: SessionData = {
+    authenticated: true,
+    timestamp: Date.now(),
+    adminName,
+    role,
+  };
+  localStorage.setItem(SESSION_KEY, JSON.stringify(sessionData));
 }
 
 export function clearSession(): void {
-  if (typeof window !== 'undefined') {
-    localStorage.removeItem(SESSION_KEY);
-  }
+  if (typeof window === 'undefined') return;
+  localStorage.removeItem(SESSION_KEY);
 }
 
-export function getCurrentAdmin(): string | null {
-  if (typeof window === 'undefined') {
-    return null;
-  }
-
+function getSession(): SessionData | null {
+  if (typeof window === 'undefined') return null;
   try {
-    const sessionDataStr = localStorage.getItem(SESSION_KEY);
-
-    if (!sessionDataStr) {
+    const raw = localStorage.getItem(SESSION_KEY);
+    if (!raw) return null;
+    const session: SessionData = JSON.parse(raw);
+    if (!session.authenticated || !session.timestamp) return null;
+    // Expire after 24 hours
+    if (Date.now() - session.timestamp > SESSION_DURATION) {
+      clearSession();
       return null;
     }
-
-    const sessionData: SessionData = JSON.parse(sessionDataStr);
-
-    if (!sessionData.authenticated || !sessionData.adminName) {
-      return null;
-    }
-
-    return sessionData.adminName;
-  } catch (error) {
-    console.error('Error reading admin name:', error);
+    return session;
+  } catch {
+    clearSession();
     return null;
   }
 }
 
 export function isAuthenticated(): boolean {
-  if (typeof window === 'undefined') {
-    return false;
-  }
+  return getSession() !== null;
+}
 
-  try {
-    const sessionDataStr = localStorage.getItem(SESSION_KEY);
+/** Returns true only when the logged-in user has the 'superadmin' role */
+export function isSuperAdmin(): boolean {
+  const session = getSession();
+  return session?.role === 'superadmin';
+}
 
-    if (!sessionDataStr) {
-      return false;
-    }
+export function getCurrentAdmin(): string | null {
+  return getSession()?.adminName ?? null;
+}
 
-    const sessionData: SessionData = JSON.parse(sessionDataStr);
-
-    // Check if session data is valid
-    if (!sessionData.authenticated || !sessionData.timestamp) {
-      clearSession();
-      return false;
-    }
-
-    // Check if session has expired (24 hours)
-    const now = Date.now();
-    const sessionAge = now - sessionData.timestamp;
-
-    if (sessionAge > SESSION_DURATION) {
-      // Session expired, clear it
-      clearSession();
-      return false;
-    }
-
-    // Session is valid
-    return true;
-  } catch (error) {
-    // Invalid session data, clear it
-    console.error('Error reading session data:', error);
-    clearSession();
-    return false;
-  }
+export function getCurrentRole(): AdminRole | null {
+  return getSession()?.role ?? null;
 }
 
 export function getSessionRemainingTime(): number {
-  if (typeof window === 'undefined') {
-    return 0;
-  }
-
+  if (typeof window === 'undefined') return 0;
   try {
-    const sessionDataStr = localStorage.getItem(SESSION_KEY);
-
-    if (!sessionDataStr) {
-      return 0;
-    }
-
-    const sessionData: SessionData = JSON.parse(sessionDataStr);
-
-    if (!sessionData.authenticated || !sessionData.timestamp) {
-      return 0;
-    }
-
-    const now = Date.now();
-    const sessionAge = now - sessionData.timestamp;
-    const remainingTime = SESSION_DURATION - sessionAge;
-
-    return remainingTime > 0 ? remainingTime : 0;
-  } catch (error) {
+    const raw = localStorage.getItem(SESSION_KEY);
+    if (!raw) return 0;
+    const session: SessionData = JSON.parse(raw);
+    if (!session.authenticated || !session.timestamp) return 0;
+    const remaining = SESSION_DURATION - (Date.now() - session.timestamp);
+    return remaining > 0 ? remaining : 0;
+  } catch {
     return 0;
   }
 }
-

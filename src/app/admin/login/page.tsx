@@ -30,8 +30,9 @@ export default function AdminLogin() {
     // Simulate a small delay for better UX
     await new Promise((resolve) => setTimeout(resolve, 500));
 
-    if (validateCredentials(email, password)) {
-      setSession('Admin'); // Default admin name
+    const account = validateCredentials(email, password);
+    if (account) {
+      setSession(account.name, account.role);
       router.push('/admin');
     } else {
       setError('Invalid email or password');

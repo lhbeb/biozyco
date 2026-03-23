@@ -4,10 +4,10 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
-import { Link2, Plus, Edit, Trash2, Eye, Users, LogOut, Copy, Check, BarChart3, RefreshCw, Trash, MoreVertical, Search, X } from 'lucide-react';
+import { Link2, Plus, Edit, Trash2, Eye, Users, LogOut, Copy, Check, BarChart3, RefreshCw, Trash, MoreVertical, Search, X, Terminal } from 'lucide-react';
 import { UserPage } from '@/types';
 import AuthGuard from '@/components/AuthGuard';
-import { clearSession } from '@/lib/auth';
+import { clearSession, isSuperAdmin } from '@/lib/auth';
 import Tooltip from '@/components/Tooltip';
 import AnalyticsModal from '@/components/AnalyticsModal';
 
@@ -28,6 +28,7 @@ function AdminDashboardContent() {
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState<'newest' | 'oldest' | 'highest-views'>('newest');
   const [filterListedBy, setFilterListedBy] = useState('');
+  const [superAdmin] = useState(() => isSuperAdmin());
 
   useEffect(() => {
     fetchUsers();
@@ -275,8 +276,8 @@ function AdminDashboardContent() {
             </Link>
           </div>
 
-          {/* Center: Logo and Admin Badge */}
-          <div className="flex-1 flex justify-center items-center gap-3">
+          {/* Center: Logo, Admin Badge, and Scripts nav */}
+          <div className="flex-1 flex justify-center items-center gap-4">
             <Link href="/admin" className="flex items-center gap-3">
               <Image
                 src="/biozy-logo.svg"
@@ -289,6 +290,15 @@ function AdminDashboardContent() {
                 Admin
               </span>
             </Link>
+            {superAdmin && (
+              <Link
+                href="/admin/scripts"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-semibold text-text-primary/60 hover:text-accent hover:bg-accent/8 transition-colors"
+              >
+                <Terminal size={15} />
+                Scripts
+              </Link>
+            )}
           </div>
 
           {/* Right: Logout */}
